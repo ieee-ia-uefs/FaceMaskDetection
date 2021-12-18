@@ -14,7 +14,7 @@ batch_size = 32
 img_height = 224
 img_width = 224
 
-def load_images():
+def load_images_with_generator():
 
   dataGen = tf.keras.preprocessing.image.ImageDataGenerator(
                                                             rescale=1./255,
@@ -46,8 +46,35 @@ def load_images():
 
   return train, validation
 
-train, validation = load_images()
+def load_images_without_generator():
+
+  train = tf.keras.preprocessing.image_dataset_from_directory(data_dir,
+                                                              batch_size=batch_size,
+                                                              image_size=(img_height,img_width),
+                                                              validation_split=0.2,
+                                                              shuffle=True,
+                                                              seed=42,
+                                                              subset='training')
+  
+  validation = tf.keras.preprocessing.image_dataset_from_directory(data_dir,
+                                                              batch_size=batch_size,
+                                                              image_size=(img_height,img_width),
+                                                              validation_split=0.2,
+                                                              shuffle=True,
+                                                              seed=42,
+                                                              subset='validation')
+  
+  return train, validation
+  
+train, validation = load_images_without_generator()
+
 num_classes = train.num_classes
+
+num_classes = len(train.class_names)
+
+val_batches =  tf.data.experimental.cardinality(validation)
+teste = validation.take(val_batches // 5)
+validation = validation.skip(val_batches // 5)
 
 base_model = MobileNetV2(input_shape=(img_height, img_width, 3), weights='imagenet',  include_top=False)
 base_model.trainable = False
@@ -64,4 +91,9 @@ model = Sequential([
 model.compile(optimizer=Adam(learning_rate=1e-4), loss='binary_crossentropy', metrics='accuracy')
 
 model.fit(train, validation_data = validation, epochs=5)
+
+loss, accuracy = model.evaluate(teste)
+print('Test accuracy :', accuracy)
+
+
 model.save("facemask_detector.model", save_format="h5")
