@@ -59,8 +59,8 @@ while True:
         (mask, withoutMask) = pred
 
         label = "Com mascara" if mask > withoutMask else "Sem mascara"
-        color = (51, 204, 51) if label == "Com mascara" else (255, 26, 26)
-
+        color = (51, 204, 51) if label == "Com mascara" else (26, 26, 255)
+        
         label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
 
         cv2.putText(frame, label, (startX, startY - 10),
